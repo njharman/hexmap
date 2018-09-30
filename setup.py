@@ -12,6 +12,6 @@ setup(
         author='Norman J. Harman Jr.',
         author_email='njharman@gmail.com',
         url='',
-        platforms='all, linux(tested)',
+        platforms='Python 3.5',
         packages=['hexmap', ],
         )

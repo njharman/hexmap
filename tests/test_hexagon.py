@@ -1,21 +1,4 @@
-__copyright__ = 'Copyright (c) 2004-2005, 2012 Norman J. Harman Jr. njharman@gmail.com'
-__license__ = '''This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; version 2 of the License.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA'''
-__doc__ = '''\
-%(copyright)s
-
-%(license)s
-''' % {'copyright': __copyright__, 'license': __license__}
+'Copyright (c) 2004-2005, 2012, 2016 Norman J. Harman Jr. njharman@gmail.com'
 
 import unittest
 
@@ -28,7 +11,7 @@ class BaseTestCase(unittest.TestCase):
     def assertHexesEqual(self, expected, hexes, *args, **kwargs):
         for hex in hexes:
             self.assertIsInstance(hex, hexmap.Hex, *args, **kwargs)
-        self.assertItemsEqual(expected, [str(h) for h in hexes], *args, **kwargs)
+        self.assertEqual(set(expected), set(str(h) for h in hexes), *args, **kwargs)
 
 
 class HexTestCase(BaseTestCase):

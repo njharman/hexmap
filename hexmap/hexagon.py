@@ -11,7 +11,7 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program; if not, write to the Free Software Foundation, Inc., 59 Temple
 Place, Suite 330, Boston, MA 02111-1307 USA'''
-__doc__ = '''Paper wargame style hexes.
+__doc__ = '''Paper war game style hexes.
 
 %(copyright)s
 
@@ -29,9 +29,9 @@ class OffMapError(ValueError):
 
 
 class Hex(object):
-    '''Traditional wargame four digit hexes, "0142".
+    '''Traditional war game four digit hexes, "0142".
 
-     - "Flat" on top hexgrid with "0101 in upper left.
+     - "Flat" on top hex grid with "0101 in upper left.
      - Hexsides numbered 1-6 clockwise, 1 at top.
      - "0142" is split into "01", self.x part and '42', self.y part.
      - Hex numbers is unbounded in all directions, neg/pos.
@@ -39,33 +39,31 @@ class Hex(object):
        "00001234".
 
     Note:  Consider Hex instances to be "immutable", although this is not
-    currently enforeced.
+    currently enforced.
     '''
-    digits = 2  # x, y portions of string value are zero padded this many digits mininum.
+    digits = 2  # x, y portions of string value are zero padded this many digits minimum.
 
     __slots__ = ('x', 'y', '_value')
 
     def __init__(self, x=None, y=None):
-        '''
-        Following constructions are supported.
+        '''Following constructions are supported.
 
-          * Hex()           # (0,0) origin.
-          * Hex('0134')     # (1,34) even length string.
-          * Hex('101034')   # (101,34)
-          * Hex('14')       # (1,4)
-          * Hex('-1010')    # (-10, 10)
-          * Hex('10-10')    # (10, -10)
-          * Hex('-10-10')   # (-10, -10)
-          * Hex(1, -34)     # (1,-34) +/- integer, +/- integer.
-          * Hex(2301)       # (23,01) Even 'length' integer.
-          * Hex(101034)     # (101,34)
+          - Hex()           # (0,0) origin.
+          - Hex(2301)       # (23,01) Even 'length' integer.
+          - Hex(101034)     # (101,34)
+          - Hex(1, -34)     # (1,-34) +/- integer, +/- integer.
+          - Hex('0134')     # (1,34) even length string.
+          - Hex('101034')   # (101,34)
+          - Hex('14')       # (1,4)
+          - Hex('-1010')    # (-10, 10)
+          - Hex('10-10')    # (10, -10)
+          - Hex('-10-10')   # (-10, -10)
 
         Not valid.
 
-          * Hex(110)
-          * Hex(0110)
-          * Hex(-1010)
-          *
+          - Hex(110)
+          - Hex(0110)
+          - Hex(-1010)
         '''
         if x is None:
             x, y = 0, 0
@@ -79,7 +77,7 @@ class Hex(object):
         # moved out of constructor for lazy eval.
         if not hasattr(self, '_value'):
             digits = max(self.digits, len(str(abs(self.x))), len(str(abs(self.y))))
-            # annoying that sign is factored into padding.  -2,4 is '-204' not '-0204'.
+            # Annoying that sign is factored into padding.  -2,4 is '-204' not '-0204'.
             self._value = ('{:0%id}{:=0%id}' % (digits + (self.x < 0), digits + (self.y < 0))).format(self.x, self.y)
         return self._value
 
@@ -93,12 +91,9 @@ class Hex(object):
         return [self.x, self.y][idx]
 
     def __hash__(self):
-        # hash tuple to avoid calling .value / string stuff which is expensive
+        # Hash tuple to avoid calling .value / string stuff which is expensive
         # and may never need to be calculated.
         return hash((self.x, self.y))
-        if not hasattr(self, '_value'):
-            self._value = hash((self.x, self.y))
-        return self._value
 
     def __eq__(self, other):
         try:
@@ -140,6 +135,44 @@ class Hex(object):
     def __rsub__(self, other):
         '''Any two item sequence - Hex'''
         return self.__class__(self.x - int(other[0]), self.y - int(other[1]))
+
+    @classmethod
+    def split(klass, value):
+        '''Split value into hex.x and hex.y.'''
+        value = str(value)
+        length = len(value.replace('-', ''))
+        if length % 2:
+            raise ValueError('''Hexes can't be constructed from odd length value [%s]''' % (value, ))
+        digits = length // 2
+        if value.startswith('-'):  # odd length
+            x, y = value[:digits + 1], value[digits + 1:]
+        else:
+            x, y = value[:digits], value[digits:]
+        return x, y
+
+    @classmethod
+    def delta(klass, start, end):
+        '''How many hexsides(0-5) between start(exclusive) and end(inclusive).'''
+        # TODO:: kind of cheaty, wasteful
+        return len(list(klass.rotator(start, end))) - 1
+
+    @classmethod
+    def rotate(klass, hexside, delta):
+        '''Calc direction that is 'delta' clockwise rotations from hexside.'''
+        hexside += delta
+        while hexside > 6:
+            hexside -= 6
+        while hexside < 1:
+            hexside += 6
+        return hexside
+
+    @classmethod
+    def rotator(klass, start, end):
+        '''Generator, iterates clockwise over directions, start -> end, inclusive.'''
+        yield start
+        while start != end:
+            start = klass.rotate(start, 1)
+            yield start
 
     def copy(self):
         return self.__class__(self.x, self.y)
@@ -259,7 +292,7 @@ class Hex(object):
     def arc(self, start, end, distance=1, include_self=False, full_circle=False):
         '''Hexes in arc defined by hexsides (clockwise, inclusive).
         NOTE: The arc 1,6 is not all surrounding hexes. It does not include the
-        hexes beyond range 1 betwen the hexrows heading out direction 1 and 6.
+        hexes beyond range 1 between the hex rows heading out direction 1 and 6.
         :param start: hexside 1-6.
         :param end: hexside 1-6.
         :param distance: how far out to walk.
@@ -322,50 +355,12 @@ class Hex(object):
             side += 2
         return hexes
 
-    @classmethod
-    def split(klass, value):
-        '''Split value into hex.x and hex.y.'''
-        value = str(value)
-        length = len(value.replace('-', ''))
-        if length % 2:
-            raise ValueError('''Hexes can't be constructed from odd length value [%s]''' % (value, ))
-        digits = length / 2
-        if value.startswith('-'):  # odd length
-            x, y = value[:digits + 1], value[digits + 1:]
-        else:
-            x, y = value[:digits], value[digits:]
-        return x, y
-
-    @classmethod
-    def delta(klass, start, end):
-        '''How many hexsides(0-5) between start(exlusive) and end(inclusive).'''
-        # TODO:: kind of cheaty, wasteful
-        return len(list(klass.rotator(start, end))) - 1
-
-    @classmethod
-    def rotate(klass, hexside, delta):
-        '''Calc direction that is 'delta' clockwise rotations from hexside.'''
-        hexside += delta
-        while hexside > 6:
-            hexside -= 6
-        while hexside < 1:
-            hexside += 6
-        return hexside
-
-    @classmethod
-    def rotator(klass, start, end):
-        '''Generator, iterates clockwise over directions, start -> end, inclusive.'''
-        yield start
-        while start != end:
-            start = klass.rotate(start, 1)
-            yield start
-
 
 class BoundedHex(Hex):
-    '''Same as Hex, except "map" has boundries and Hex instances outside those
+    '''Same as Hex, except "map" has boundaries and Hex instances outside those
     won't be returned and can't be created.
     '''
-    # Boundries of map, inclusive.
+    # Boundaries of map, inclusive. Subclass to change.
     xmin = 1
     xmax = 99
     ymin = 1

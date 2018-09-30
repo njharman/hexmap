@@ -63,6 +63,6 @@ def astar(current, end, maxsteps=1000):
 
 funk = Node('0608'), Node('1112')
 path = astar(*funk)[1:]
-print 'from %s -> %s' % funk
+print('from %s -> %s' % funk)
 for step in path:
-    print step
+    print(step)
