@@ -28,7 +28,7 @@ class OffMapError(ValueError):
     '''Hex is off map.'''
 
 
-class Hex(object):
+class Hex:
     '''Traditional war game four digit hexes, "0142".
 
      - "Flat" on top hex grid with "0101 in upper left.
@@ -88,16 +88,19 @@ class Hex(object):
         return 2
 
     def __getitem__(self, idx):
-        return [self.x, self.y][idx]
+        if idx == 0:
+            return self.x
+        if idx == 1:
+            return self.y
+        raise IndexError
 
     def __hash__(self):
-        # Hash tuple to avoid calling .value / string stuff which is expensive
-        # and may never need to be calculated.
         return hash((self.x, self.y))
 
     def __eq__(self, other):
+        print('comp', other)
         try:
-            if isinstance(other, Hex):
+            if isinstance(other, self.__class__):
                 # Compare this and not .value, much faster.
                 return self.x == other.x and self.y == other.y
             elif isinstance(other, str):
@@ -108,6 +111,7 @@ class Hex(object):
                 x, y = other[0], other[1]
             return self.x == int(x) and self.y == int(y)
         except (TypeError, IndexError, ValueError):
+            print('dick')
             return False
 
     def __ne__(self, other):
@@ -137,7 +141,7 @@ class Hex(object):
         return self.__class__(self.x - int(other[0]), self.y - int(other[1]))
 
     @classmethod
-    def split(klass, value):
+    def split(cls, value):
         '''Split value into hex.x and hex.y.'''
         value = str(value)
         length = len(value.replace('-', ''))
@@ -151,13 +155,13 @@ class Hex(object):
         return x, y
 
     @classmethod
-    def delta(klass, start, end):
+    def delta(cls, start, end):
         '''How many hexsides(0-5) between start(exclusive) and end(inclusive).'''
         # TODO:: kind of cheaty, wasteful
-        return len(list(klass.rotator(start, end))) - 1
+        return len(list(cls.rotator(start, end))) - 1
 
     @classmethod
-    def rotate(klass, hexside, delta):
+    def rotate(cls, hexside, delta):
         '''Calc direction that is 'delta' clockwise rotations from hexside.'''
         hexside += delta
         while hexside > 6:
@@ -167,11 +171,11 @@ class Hex(object):
         return hexside
 
     @classmethod
-    def rotator(klass, start, end):
+    def rotator(cls, start, end):
         '''Generator, iterates clockwise over directions, start -> end, inclusive.'''
         yield start
         while start != end:
-            start = klass.rotate(start, 1)
+            start = cls.rotate(start, 1)
             yield start
 
     def copy(self):
@@ -370,17 +374,18 @@ class BoundedHex(Hex):
         if x is None and y is None:
             x = self.xmin
             y = self.ymin
-        super(BoundedHex, self).__init__(x, y)
+        super().__init__(x, y)
         if not self._valid(self):
-            raise OffMapError('Out of bounds [%s].' % self)
+            raise OffMapError(f'"{self}" Out of bounds [{self.xmin} - {self.xmax}, {self.ymin} - {self.ymax}].')
 
     @classmethod
     def _valid(klas, hex):
-        return not (hex.x < klas.xmin or
-                    hex.y < klas.ymin or
-                    hex.x > klas.xmax or
-                    hex.y > klas.ymax
-                    )
+        return not (
+                hex.x < klas.xmin or
+                hex.y < klas.ymin or
+                hex.x > klas.xmax or
+                hex.y > klas.ymax
+                )
 
     def sixpack(self, *args, **kwargs):
         # Kind of hackish, inefficient. Use unbounded Hex() to do sixpack.  Then
