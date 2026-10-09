@@ -1,0 +1,133 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "hexmap"
+dynamic = ["version"]
+description = "Paper wargame style hexagon maps."
+readme = "README.rst"
+requires-python = ">=3.14"
+license = "GPL-2.0-or-later"
+license-files = ["LICENSE"]
+authors = [{ name = "Norman J. Harman Jr.", email = "njharman@gmail.com" }]
+keywords = ["hexagon", "hex", "map", "wargame", "grid"]
+
+[project.urls]
+Repository = "https://github.com/njharman/hexmap"
+Changelog = "https://github.com/njharman/hexmap/blob/trunk/CHANGELOG"
+
+[tool.hatch.version]
+path = "src/hexmap/__init__.py"
+
+[dependency-groups]
+dev = ["pre-commit>=4", "pytest>=8", "pytest-cov>=6", "ruff>=0.15"]
+
+[tool.pytest.ini_options]
+cache_dir = "$HOME/.cache/pytest/hexmap"
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --cov=hexmap --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["hexmap"]
+branch = true
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.ruff.lint]
+select = [
+  "A", # flake8-builtins
+  "ASYNC", # flake8-async
+  "B", # flake8-bugbear
+  "BLE", # flake8-blind-except
+  "C4", # unnecessary comprehensions, map()
+  "COM", # flake8-commas
+  # pydocstyle, docstring formatting only; missing-docstring D1xx deliberately not selected
+  "D200", # one-line docstring fits on one line
+  "D201", # no blank line before function docstring
+  "D202", # no blank line after function docstring
+  "D205", # blank line between summary and description
+  "D206", # indent docstring with spaces
+  "D207", # docstring under-indented
+  "D208", # docstring over-indented
+  "D209", # multi-line closing quotes on own line
+  "D210", # no whitespace around docstring text
+  "D211", # no blank line before class docstring (pick of D203/D211)
+  "D212", # multi-line summary on first line (pick of D212/D213)
+  "D300", # triple double quotes
+  "D301", # r-string if backslashes in docstring
+  "D403", # capitalize first word
+  "D415", # summary ends with punctuation
+  "D419", # no empty docstrings
+  "DTZ", # flake8-datetimez
+  "E", # pycodestyle
+  "ERA", # no commented out code
+  "EXE", # flake8-executable
+  "F", # pyflakes
+  "FLY", # flynt: "".join() of static strings → f-string
+  "FURB", # refurb: modern idioms (open().read() → read_text, operator funcs, min/max)
+  "G", # flake8-logging-format
+  "I", # isort
+  "ICN", # import conventions
+  "ISC", # implicit string concat
+  "LOG", # flake8-logging
+  "PERF", # perflint: slow loop patterns (append in loop, dict.items misuse)
+  "PGH", # pygrep-hooks (blanket noqa, etc.)
+  "PIE", # flake8-pie: misc cruft (unneeded pass, dup class fields, redundant range start)
+  "PLC", # pylint conventions
+  "PLE", # pylint errors
+  "PLW", # pylint warnings
+  "PT", # flake8-pytest-style
+  "PTH", # use pathlib
+  "RET", # flake8-return
+  "RSE", # flake8-raise
+  "RUF", # ruff rules
+  "S", # flake8-bandit
+  "SIM", # flake8-simplify
+  "SLF", # private member access
+  "T10", # debugger: leftover breakpoint()/pdb
+  "T20", # print: stray print()/pprint()
+  "TID", # tidy imports
+  "TRY", # tryceratops: exception handling (raise bare Exception, verbose re-raise, try/else, log.exception)
+  "UP", # pyupgrade: drop syntax obsolete for target-version
+  "W", # pycodestyle warnings
+  "YTT", # sys.version misuse
+]
+ignore = [
+  "C408", # dict()/list() calls are fine
+  "COM812", # conflicts with the formatter
+  "COM819", # trailing commas are fine
+  "E501", # line length is the formatter's job
+  "E731", # lambda assignment is fine
+  "RET503", # implicit return None is fine
+  "RUF012", # fix wants typing.ClassVar annotation; no type hints
+  "SIM108", # ternaries allowed, not required
+  "SIM300", # yoda conditions are fine
+  "TRY003", # long messages at raise site are fine
+  # Common domain ignores, add only when the project needs them:
+  # "S311", # random used for games/sim, not crypto
+  # "S603", # subprocess without shell is intended
+  # "S607", # partial executable paths (git, etc.) are intended
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = [
+  "F401", # re-exports
+]
+"src/hexmap/astar.py" = [
+  "T201", # demo output when run as a script
+]
+# TODO: fix commented out debug logging
+"src/hexmap/hexagon.py" = [
+  "ERA001", # commented-out debug logging
+]
+"tests/**" = [
+  "S101", # assert is how pytest works
+  "S108", # temp paths in tests
+  "SLF001", # tests may poke private members
+  "T201", # print in tests is fine
+]

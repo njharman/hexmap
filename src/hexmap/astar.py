@@ -5,7 +5,7 @@ from hexmap import Hex
 
 class Node(Hex):
     def __init__(self, *args, **kwargs):
-        super(Node, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.parent = None
         self.cost = 0
 
@@ -17,9 +17,7 @@ class Node(Hex):
             return True
         if self.x % 2 and self.y % 2:
             return True
-        if self.x == 9 and self.y in range(10, 24):
-            return True
-        return False
+        return self.x == 9 and self.y in range(10, 24)
 
 
 def astar(current, end, maxsteps=1000):
@@ -32,15 +30,15 @@ def astar(current, end, maxsteps=1000):
         return path
 
     heap = list()
-    open = set()
+    open_set = set()
     closed = set()
-    open.add(current)
+    open_set.add(current)
     heap.append((0, current))
-    while open:
+    while open_set:
         current = heapq.heappop(heap)[1]
         if current == end:
             return retrace(current)
-        open.remove(current)
+        open_set.remove(current)
         closed.add(current)
         for node in current.sixpack():
             if node in closed:
@@ -49,20 +47,21 @@ def astar(current, end, maxsteps=1000):
                 closed.add(node)
                 continue
             new_cost = current.cost + current.cost_to(node)
-            if node in open:
+            if node in open_set:
                 if node.cost > new_cost:
                     node.cost = new_cost
                     node.parent = current
             else:
-                open.add(node)
+                open_set.add(node)
                 node.cost = new_cost
                 node.parent = current
                 heapq.heappush(heap, (node.cost_to(end) + node.cost, node))
     return list()
 
 
-funk = Node('0608'), Node('1112')
-path = astar(*funk)[1:]
-print('from %s -> %s' % funk)
-for step in path:
-    print(step)
+if __name__ == '__main__':
+    funk = Node('0608'), Node('1112')
+    path = astar(*funk)[1:]
+    print('from {} -> {}'.format(*funk))
+    for step in path:
+        print(step)

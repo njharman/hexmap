@@ -1,20 +1,17 @@
-'Copyright (c) 2004-2005, 2012, 2016 Norman J. Harman Jr. njharman@gmail.com'
+"""Copyright (c) 2004-2005, 2012, 2016 Norman J. Harman Jr. njharman@gmail.com."""
 
-import unittest
+import pytest
 
 import hexmap
 
 
-class BaseTestCase(unittest.TestCase):
-    longMessage = True
-
-    def assertHexesEqual(self, expected, hexes, *args, **kwargs):
-        for hex in hexes:
-            self.assertIsInstance(hex, hexmap.Hex, *args, **kwargs)
-        self.assertEqual(set(expected), set(str(h) for h in hexes), *args, **kwargs)
+def assert_hexes_equal(expected, hexes, msg=''):
+    for h in hexes:
+        assert isinstance(h, hexmap.Hex), msg
+    assert set(expected) == {str(h) for h in hexes}, msg
 
 
-class HexTestCase(BaseTestCase):
+class TestHex:
     def test_creation(self):
         tests = (
             ((), 0, 0, '0000'),
@@ -33,9 +30,9 @@ class HexTestCase(BaseTestCase):
             )
         for (args, expected_x, expected_y, expected_value) in tests:
             t = hexmap.Hex(*args)
-            self.assertEqual(expected_x, t.x, 'Hex(%s)' % (args, ))
-            self.assertEqual(expected_y, t.y, 'Hex(%s)' % (args, ))
-            self.assertEqual(expected_value, t.value, 'Hex(%s)' % (args, ))
+            assert expected_x == t.x, f'Hex({args})'
+            assert expected_y == t.y, f'Hex({args})'
+            assert expected_value == t.value, f'Hex({args})'
 
     def test_digits(self):
         class Foo(hexmap.Hex):
@@ -49,62 +46,62 @@ class HexTestCase(BaseTestCase):
             )
         for (args, expected_x, expected_y, expected_value) in tests:
             t = Foo(*args)
-            self.assertEqual(expected_x, t.x, 'Hex(%s)' % (args, ))
-            self.assertEqual(expected_y, t.y, 'Hex(%s)' % (args, ))
-            self.assertEqual(expected_value, t.value, 'Hex(%s)' % (args, ))
+            assert expected_x == t.x, f'Hex({args})'
+            assert expected_y == t.y, f'Hex({args})'
+            assert expected_value == t.value, f'Hex({args})'
 
     def test_copy(self):
         t1 = hexmap.Hex('0102')
         t2 = t1.copy()
-        self.assertEqual(t1, t2)
-        self.assertEqual(hash(t1), hash(t2))
+        assert t1 == t2
+        assert hash(t1) == hash(t2)
 
     def test_hashable(self):
         ahex = hexmap.Hex()
         bhex = hexmap.Hex('0101')
         chex = hexmap.Hex('0101')
-        self.assertEqual(hash(bhex), hash(chex))
+        assert hash(bhex) == hash(chex)
         # sets
         t1 = set()
         t1.add(ahex)
         t1.add(ahex)
-        self.assertEqual(1, len(t1))
+        assert 1 == len(t1)
         t1.add(bhex)
-        self.assertEqual(2, len(t1))
+        assert 2 == len(t1)
         t1.add(chex)
-        self.assertEqual(2, len(t1))
+        assert 2 == len(t1)
         # dicts
         t2 = dict()
         t2[ahex] = 'boo'
-        self.assertEqual(1, len(t2))
+        assert 1 == len(t2)
         t2[bhex] = 'boo'
-        self.assertEqual(2, len(t2))
+        assert 2 == len(t2)
         t2[chex] = 'boo'
-        self.assertEqual(2, len(t2))
+        assert 2 == len(t2)
 
     def test_equality(self):
         t = hexmap.Hex(12, 34)
-        self.assertEqual(1234, t)
-        self.assertEqual((12, 34), t)
-        self.assertEqual('1234', t)
-        self.assertEqual('012034', t)
-        self.assertEqual(hexmap.Hex('1234'), t)
-        self.assertNotEqual(123400, t)
-        self.assertNotEqual((123, 34), t)
-        self.assertNotEqual((12, 22), t)
-        self.assertNotEqual('1222', t)
-        self.assertNotEqual('-1234', t)
-        self.assertNotEqual('12-34', t)
-        self.assertNotEqual('-12-34', t)
-        self.assertNotEqual(hexmap.Hex('1111'), t)
+        assert 1234 == t
+        assert (12, 34) == t
+        assert '1234' == t
+        assert '012034' == t
+        assert hexmap.Hex('1234') == t
+        assert 123400 != t
+        assert (123, 34) != t
+        assert (12, 22) != t
+        assert '1222' != t
+        assert '-1234' != t
+        assert '12-34' != t
+        assert '-12-34' != t
+        assert hexmap.Hex('1111') != t
         t2 = hexmap.Hex('0101')
-        self.assertEqual((1, 1), t2)
+        assert (1, 1) == t2
         # negative
         t = hexmap.Hex(12, -34)
-        self.assertEqual((12, -34), t)
-        self.assertEqual('12-34', t)
-        self.assertNotEqual((12, 34), t)
-        self.assertNotEqual('1234', t)
+        assert (12, -34) == t
+        assert '12-34' == t
+        assert (12, 34) != t
+        assert '1234' != t
 
     def test_str(self):
         tests = (
@@ -124,18 +121,19 @@ class HexTestCase(BaseTestCase):
                 ('0101', ('001001', )),
                 )
         for (expected, args) in tests:
-            self.assertEqual(expected, str(hexmap.Hex(*args)))
+            assert expected == str(hexmap.Hex(*args))
 
     def test_sequence_stuff(self):
         # len() tuple() list() indexing
-        self.assertEqual(2, len(hexmap.Hex()))
-        self.assertEqual(2, len(hexmap.Hex(1231231231)))
+        assert 2 == len(hexmap.Hex())
+        assert 2 == len(hexmap.Hex(1231231231))
         t = hexmap.Hex(12, 34)
-        self.assertEqual((12, 34), tuple(t))
-        self.assertEqual([12, 34], list(t))
-        self.assertEqual(12, t[0])
-        self.assertEqual(34, t[1])
-        self.assertRaises(IndexError, lambda: t[3])
+        assert (12, 34) == tuple(t)
+        assert [12, 34] == list(t)
+        assert 12 == t[0]
+        assert 34 == t[1]
+        with pytest.raises(IndexError):
+            t[3]
 
     def test_math(self):
         H = hexmap.Hex
@@ -149,14 +147,14 @@ class HexTestCase(BaseTestCase):
                 )
         for (add, sub, a, b) in tests:
             result = a + b
-            self.assertIsInstance(result, hexmap.Hex)
-            self.assertEqual(add, result)
+            assert isinstance(result, hexmap.Hex)
+            assert add == result
             result = b + a
-            self.assertIsInstance(result, hexmap.Hex)
-            self.assertEqual(add, result)
+            assert isinstance(result, hexmap.Hex)
+            assert add == result
             result = a - b
-            self.assertIsInstance(result, hexmap.Hex)
-            self.assertEqual(sub, result)
+            assert isinstance(result, hexmap.Hex)
+            assert sub == result
 
     def test_hex_in_direction(self):
         tests = (
@@ -170,11 +168,11 @@ class HexTestCase(BaseTestCase):
                 (1519, 3, '1619'),
                 (1519, 5, '1419'),
                 )
-        for (hex, direction, expected) in tests:
-            t = hexmap.Hex(hex)
+        for (h, direction, expected) in tests:
+            t = hexmap.Hex(h)
             result = t.hex_in_direction(direction)
-            self.assertIsInstance(result, hexmap.Hex)
-            self.assertEqual(expected, result)
+            assert isinstance(result, hexmap.Hex)
+            assert expected == result
 
     def test_distance_to(self):
         tests = (
@@ -187,18 +185,18 @@ class HexTestCase(BaseTestCase):
         for (from_hex, to_hex, expected) in tests:
             to = hexmap.Hex(to_hex)
             t = hexmap.Hex(from_hex)
-            self.assertEqual(expected, t.distance_to(to))
+            assert expected == t.distance_to(to)
 
     def test_sixpack(self):
         expected = ['1110', '1210', '1211', '1112', '1011', '1010']
         t = hexmap.Hex(11, 11)
-        self.assertHexesEqual(expected, t.sixpack())
-        self.assertHexesEqual(expected, t.sixpack(1))
+        assert_hexes_equal(expected, t.sixpack())
+        assert_hexes_equal(expected, t.sixpack(1))
         expected.append('1111')
-        self.assertHexesEqual(expected, t.sixpack(include_self=True))
+        assert_hexes_equal(expected, t.sixpack(include_self=True))
         expected2 = ['1508', '1608', '1609', '1510', '1409', '1408', '1507', '1607', '1708', '1709', '1710', '1610', '1511', '1410', '1310', '1309', '1308', '1407']
         t2 = hexmap.Hex('1509')
-        self.assertHexesEqual(expected2, t2.sixpack(2))
+        assert_hexes_equal(expected2, t2.sixpack(2))
 
     def test_arc(self):
         data = (
@@ -219,10 +217,10 @@ class HexTestCase(BaseTestCase):
         for (args, distance, start, end, expected) in data:
             t = hexmap.Hex(*args)
             hexes = t.arc(start, end, distance)
-            self.assertHexesEqual(expected, hexes, msg='\nhex:%s from %s to %s, distance %s -> %s' % (t, start, end, distance, sorted(str(h) for h in hexes)))
+            assert_hexes_equal(expected, hexes, msg=f'\nhex:{t} from {start} to {end}, distance {distance} -> {sorted(str(h) for h in hexes)}')
         t = hexmap.Hex('5512')
         hexes = t.arc(5, 4, 0, True)
-        self.assertHexesEqual(['5512', ], hexes)
+        assert_hexes_equal(['5512', ], hexes)
 
     def test_half_arc(self):
         data = (
@@ -232,7 +230,7 @@ class HexTestCase(BaseTestCase):
         for (args, distance, directions, expected) in data:
             t = hexmap.Hex(*args)
             hexes = t.half_arc(directions, distance)
-            self.assertHexesEqual(expected, hexes, msg='\nhex:%s %s, distance %s -> %s' % (t, directions, distance, sorted(str(h) for h in hexes)))
+            assert_hexes_equal(expected, hexes, msg=f'\nhex:{t} {directions}, distance {distance} -> {sorted(str(h) for h in hexes)}')
 
     def test_hexsides_to(self):
         tests = (
@@ -317,7 +315,7 @@ class HexTestCase(BaseTestCase):
             to_hex = hexmap.Hex(*to_args)
             results = from_hex.hexsides_to(to_hex)
             if expected != results:
-                self.fail('Got %s not %s from %s to %s' % (results, expected, from_hex, to_hex))
+                self.fail(f'Got {results} not {expected} from {from_hex} to {to_hex}')
 
     def test_delta(self):
         tests = (
@@ -334,7 +332,7 @@ class HexTestCase(BaseTestCase):
                 )
         t = hexmap.Hex()
         for (expected, start, end) in tests:
-            self.assertEqual(expected, t.delta(start, end), 'start: %s end: %s' % (start, end))
+            assert expected == t.delta(start, end), f'start: {start} end: {end}'
 
     def test_rotate(self):
         tests = (
@@ -363,7 +361,7 @@ class HexTestCase(BaseTestCase):
                 )
         t = hexmap.Hex()
         for (expected, hexside, delta) in tests:
-            self.assertEqual(expected, t.rotate(hexside, delta), 'start: %s rotate: %s' % (hexside, delta))
+            assert expected == t.rotate(hexside, delta), f'start: {hexside} rotate: {delta}'
 
     def test_rotator(self):
         tests = (
@@ -381,10 +379,10 @@ class HexTestCase(BaseTestCase):
         t = hexmap.Hex()
         for (start, end, expected) in tests:
             result = list(t.rotator(start, end))
-            self.assertSequenceEqual(expected, result, 'start: %s end: %s' % (start, end))
+            assert list(expected) == result, f'start: {start} end: {end}'
 
 
-class BoundedHexTestCase(BaseTestCase):
+class TestBoundedHex:
     def test_creation(self):
         tests = (
             ((), 1, 1, '0101'),
@@ -396,9 +394,9 @@ class BoundedHexTestCase(BaseTestCase):
             )
         for (args, expected_x, expected_y, expected_value) in tests:
             t = hexmap.BoundedHex(*args)
-            self.assertEqual(expected_x, t.x, 'Hex(%s)' % (args, ))
-            self.assertEqual(expected_y, t.y, 'Hex(%s)' % (args, ))
-            self.assertEqual(expected_value, t.value, 'Hex(%s)' % (args, ))
+            assert expected_x == t.x, f'Hex({args})'
+            assert expected_y == t.y, f'Hex({args})'
+            assert expected_value == t.value, f'Hex({args})'
         fail = (
             (0, 1, ),
             ('0000', ),
@@ -410,7 +408,8 @@ class BoundedHexTestCase(BaseTestCase):
             (-567, 890, ),
             )
         for args in fail:
-            self.assertRaises(ValueError, hexmap.BoundedHex, *args)
+            with pytest.raises(hexmap.OffMapError):
+                hexmap.BoundedHex(*args)
 
     def test_hex_in_direction(self):
         tests = (
@@ -427,25 +426,26 @@ class BoundedHexTestCase(BaseTestCase):
                 ('9999', 5, '9899'),
                 ('9999', 6, '9898'),
                 )
-        for (hex, direction, expected) in tests:
-            t = hexmap.BoundedHex(hex)
+        for (h, direction, expected) in tests:
+            t = hexmap.BoundedHex(h)
             if expected is None:
-                self.assertRaises(hexmap.OffMapError, t.hex_in_direction, direction)
+                with pytest.raises(hexmap.OffMapError):
+                    t.hex_in_direction(direction)
             else:
                 result = t.hex_in_direction(direction)
-                self.assertIsInstance(result, hexmap.BoundedHex)
-                self.assertEqual(expected, result)
+                assert isinstance(result, hexmap.BoundedHex)
+                assert expected == result
 
     def test_sixpack(self):
         expected = ['0201', '0102', ]
         t = hexmap.BoundedHex()
-        self.assertHexesEqual(expected, t.sixpack())
-        self.assertHexesEqual(expected, t.sixpack(1))
+        assert_hexes_equal(expected, t.sixpack())
+        assert_hexes_equal(expected, t.sixpack(1))
         expected.append('0101')
-        self.assertHexesEqual(expected, t.sixpack(include_self=True))
+        assert_hexes_equal(expected, t.sixpack(include_self=True))
         expected2 = ['0801', '0702', '0601', '0901', '0902', '0802', '0703', '0602', '0502', '0501', ]
         t2 = hexmap.BoundedHex('0701')
-        self.assertHexesEqual(expected2, t2.sixpack(2))
+        assert_hexes_equal(expected2, t2.sixpack(2))
 
     def test_arc(self):
         data = (
@@ -466,7 +466,7 @@ class BoundedHexTestCase(BaseTestCase):
         for (args, distance, start, end, expected) in data:
             t = hexmap.BoundedHex(*args)
             hexes = t.arc(start, end, distance)
-            self.assertHexesEqual(expected, hexes, msg='\nhex:%s from %s to %s, distance %s -> %s' % (t, start, end, distance, sorted(str(h) for h in hexes)))
+            assert_hexes_equal(expected, hexes, msg=f'\nhex:{t} from {start} to {end}, distance {distance} -> {sorted(str(h) for h in hexes)}')
         t = hexmap.BoundedHex('5512')
         hexes = t.arc(5, 4, 0, True)
-        self.assertHexesEqual(['5512', ], hexes)
+        assert_hexes_equal(['5512', ], hexes)

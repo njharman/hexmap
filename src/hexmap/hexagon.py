@@ -11,25 +11,25 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program; if not, write to the Free Software Foundation, Inc., 59 Temple
 Place, Suite 330, Boston, MA 02111-1307 USA'''
-__doc__ = '''Paper war game style hexes.
+__doc__ = f'''Paper war game style hexes.
 
-%(copyright)s
+{__copyright__}
 
-%(license)s
-''' % {'copyright': __copyright__, 'license': __license__}
+{__license__}
+'''
 
 import logging
-log = logging.getLogger(__name__)
-
 import math
+
+log = logging.getLogger(__name__)
 
 
 class OffMapError(ValueError):
-    '''Hex is off map.'''
+    """Hex is off map."""
 
 
 class Hex:
-    '''Traditional war game four digit hexes, "0142".
+    """Traditional war game four digit hexes, "0142".
 
      - "Flat" on top hex grid with "0101 in upper left.
      - Hexsides numbered 1-6 clockwise, 1 at top.
@@ -40,13 +40,13 @@ class Hex:
 
     Note:  Consider Hex instances to be "immutable", although this is not
     currently enforced.
-    '''
+    """
     digits = 2  # x, y portions of string value are zero padded this many digits minimum.
 
-    __slots__ = ('x', 'y', '_value')
+    __slots__ = ('_value', 'x', 'y')
 
     def __init__(self, x=None, y=None):
-        '''Following constructions are supported.
+        """Following constructions are supported.
 
           - Hex()           # (0,0) origin.
           - Hex(2301)       # (23,01) Even 'length' integer.
@@ -64,7 +64,7 @@ class Hex:
           - Hex(110)
           - Hex(0110)
           - Hex(-1010)
-        '''
+        """
         if x is None:
             x, y = 0, 0
         elif y is None:
@@ -78,7 +78,9 @@ class Hex:
         if not hasattr(self, '_value'):
             digits = max(self.digits, len(str(abs(self.x))), len(str(abs(self.y))))
             # Annoying that sign is factored into padding.  -2,4 is '-204' not '-0204'.
-            self._value = ('{:0%id}{:=0%id}' % (digits + (self.x < 0), digits + (self.y < 0))).format(self.x, self.y)
+            x_width = digits + (self.x < 0)
+            y_width = digits + (self.y < 0)
+            self._value = f'{self.x:0{x_width}d}{self.y:=0{y_width}d}'
         return self._value
 
     def __str__(self):
@@ -98,20 +100,16 @@ class Hex:
         return hash((self.x, self.y))
 
     def __eq__(self, other):
-        print('comp', other)
         try:
             if isinstance(other, self.__class__):
                 # Compare this and not .value, much faster.
                 return self.x == other.x and self.y == other.y
-            elif isinstance(other, str):
-                x, y = self.split(other)
-            elif isinstance(other, int):
+            if isinstance(other, (str, int)):
                 x, y = self.split(other)
             elif len(other) == 2:
                 x, y = other[0], other[1]
             return self.x == int(x) and self.y == int(y)
         except (TypeError, IndexError, ValueError):
-            print('dick')
             return False
 
     def __ne__(self, other):
@@ -125,28 +123,28 @@ class Hex:
             return False
 
     def __add__(self, other):
-        '''Hex + any two item sequence.'''
+        """Hex + any two item sequence."""
         return self.__class__(self.x + int(other[0]), self.y + int(other[1]))
 
     def __radd__(self, other):
-        '''Any two item sequence + Hex.'''
+        """Any two item sequence + Hex."""
         return self.__class__(self.x + int(other[0]), self.y + int(other[1]))
 
     def __sub__(self, other):
-        '''Hex - any two item sequence.'''
+        """Hex - any two item sequence."""
         return self.__class__(self.x - int(other[0]), self.y - int(other[1]))
 
     def __rsub__(self, other):
-        '''Any two item sequence - Hex'''
+        """Any two item sequence - Hex."""
         return self.__class__(self.x - int(other[0]), self.y - int(other[1]))
 
     @classmethod
     def split(cls, value):
-        '''Split value into hex.x and hex.y.'''
+        """Split value into hex.x and hex.y."""
         value = str(value)
         length = len(value.replace('-', ''))
         if length % 2:
-            raise ValueError('''Hexes can't be constructed from odd length value [%s]''' % (value, ))
+            raise ValueError(f'''Hexes can't be constructed from odd length value [{value}]''')
         digits = length // 2
         if value.startswith('-'):  # odd length
             x, y = value[:digits + 1], value[digits + 1:]
@@ -156,13 +154,13 @@ class Hex:
 
     @classmethod
     def delta(cls, start, end):
-        '''How many hexsides(0-5) between start(exclusive) and end(inclusive).'''
+        """How many hexsides(0-5) between start(exclusive) and end(inclusive)."""
         # TODO:: kind of cheaty, wasteful
         return len(list(cls.rotator(start, end))) - 1
 
     @classmethod
     def rotate(cls, hexside, delta):
-        '''Calc direction that is 'delta' clockwise rotations from hexside.'''
+        """Calc direction that is 'delta' clockwise rotations from hexside."""
         hexside += delta
         while hexside > 6:
             hexside -= 6
@@ -172,7 +170,7 @@ class Hex:
 
     @classmethod
     def rotator(cls, start, end):
-        '''Generator, iterates clockwise over directions, start -> end, inclusive.'''
+        """Generator, iterates clockwise over directions, start -> end, inclusive."""
         yield start
         while start != end:
             start = cls.rotate(start, 1)
@@ -182,9 +180,7 @@ class Hex:
         return self.__class__(self.x, self.y)
 
     def distance_to(self, to_hex):
-        '''
-        :return: Distance in hexes to hex.
-        '''
+        """:return: Distance in hexes to hex."""
         if to_hex == self:
             return 0
         # if in either triangle formed by extending left/right hexsides to
@@ -193,7 +189,6 @@ class Hex:
         (a1, a2) = (self[0], self[1])
         (b1, b2) = (to_hex[0], to_hex[1])
         d1 = abs(b1 - a1)
-        d2 = abs(b2 - a2)
         offset = d1 / 2
         if (a1 % 2) and ((b1 + 1) % 2):  # if a is odd and b even
             offset += 1
@@ -209,10 +204,11 @@ class Hex:
         return distance
 
     def hexsides_to(self, to_hex):
-        '''Tuple of 1, 2, or 6(same hex) hexsides passed through on way to_hex.
+        """Tuple of 1, 2, or 6(same hex) hexsides passed through on way to_hex.
+
         Accurate for distances up to about 10000 hexes.
         :return: Tuple of integer hexsides.
-        '''
+        """
         if self == to_hex:
             return (1, 2, 3, 4, 5, 6)
         d_x = to_hex.x - self.x
@@ -221,8 +217,7 @@ class Hex:
         if d_x == 0:
             if d_y < 0:
                 return (1,)
-            else:
-                return (4,)
+            return (4,)
         # Even / odd columns need a nudge.
         if (self.x % 2) and not (to_hex.x % 2):
             d_y += .5
@@ -259,12 +254,13 @@ class Hex:
         return answer
 
     def hex_in_direction(self, direction):
-        '''
+        """Neighboring hex in direction.
+
         :param direction: hexside, numbered 1-6 clockwise, 1 being 'north'
         :return: Hex instance.
-        '''
+        """
         if direction not in (1, 2, 3, 4, 5, 6):
-            raise ValueError('Invalid direction %s.' % (direction, ))
+            raise ValueError(f'Invalid direction {direction}.')
         (x, y) = (self.x, self.y)
         odd = x % 2
         if direction == 1:
@@ -282,11 +278,12 @@ class Hex:
         return self.__class__(x, y)
 
     def sixpack(self, distance=1, include_self=False):
-        '''Surrounding hexes to distance.
+        """Surrounding hexes to distance.
+
         :return: set of Hex instances.
-        '''
+        """
         if distance == 1:
-            hexes = set([self.hex_in_direction(x) for x in (1, 2, 3, 4, 5, 6)])
+            hexes = {self.hex_in_direction(x) for x in (1, 2, 3, 4, 5, 6)}
         else:
             hexes = self.arc(1, 6, distance, include_self, full_circle=True)
         if include_self:
@@ -294,7 +291,8 @@ class Hex:
         return hexes
 
     def arc(self, start, end, distance=1, include_self=False, full_circle=False):
-        '''Hexes in arc defined by hexsides (clockwise, inclusive).
+        """Hexes in arc defined by hexsides (clockwise, inclusive).
+
         NOTE: The arc 1,6 is not all surrounding hexes. It does not include the
         hexes beyond range 1 between the hex rows heading out direction 1 and 6.
         :param start: hexside 1-6.
@@ -303,7 +301,7 @@ class Hex:
         :param include_self: include origin hex.
         :param full_circle: all hexes within x distance (prevents having to repeat walking logic in sixpack).
         :return: set of Hex instances.
-        '''
+        """
         # Go out 1 in 'start' direction,
         # Walk clockwise around ring until we get to a hex in 'end' direction,
         # Repeat 'distance' times.
@@ -322,17 +320,16 @@ class Hex:
             #log.debug('start:%s ring:%i\t%s' % (start_row, ring, [str(h) for h in hexes]))
             current = start_row
             for direction in path:
-                for i in range(ring):
-                    prev = current
+                for _ in range(ring):
                     current = current.hex_in_direction(direction)
                     hexes.add(current)
                     #log.debug('step:%i in directo %i %s -> %s\t%s' % (i + 1, direction, prev, current, [str(h) for h in hexes]))
         return hexes
 
     def half_arc(self, hexsides, distance=1, include_self=False):
-        '''180deg 'half' arc'''
+        """180deg 'half' arc."""
         # TODO: not really sure what this is...
-        # go straight adding (left/rigt) sides
+        # go straight adding (left/right) sides
         hexes = set()
         if include_self:
             hexes.add(self)
@@ -348,7 +345,7 @@ class Hex:
         while distance > 0:
             left_hex = center_hex
             right_hex = center_hex
-            for i in range(side):
+            for _ in range(side):
                 left_hex = left_hex.hex_in_direction(left)
                 hexes.add(left_hex)
                 right_hex = right_hex.hex_in_direction(right)
@@ -361,9 +358,10 @@ class Hex:
 
 
 class BoundedHex(Hex):
-    '''Same as Hex, except "map" has boundaries and Hex instances outside those
-    won't be returned and can't be created.
-    '''
+    """Same as Hex, except "map" has boundaries.
+
+    Hex instances outside those won't be returned and can't be created.
+    """
     # Boundaries of map, inclusive. Subclass to change.
     xmin = 1
     xmax = 99
@@ -379,12 +377,12 @@ class BoundedHex(Hex):
             raise OffMapError(f'"{self}" Out of bounds [{self.xmin} - {self.xmax}, {self.ymin} - {self.ymax}].')
 
     @classmethod
-    def _valid(klas, hex):
+    def _valid(klas, h):
         return not (
-                hex.x < klas.xmin or
-                hex.y < klas.ymin or
-                hex.x > klas.xmax or
-                hex.y > klas.ymax
+                h.x < klas.xmin or
+                h.y < klas.ymin or
+                h.x > klas.xmax or
+                h.y > klas.ymax
                 )
 
     def sixpack(self, *args, **kwargs):
@@ -392,9 +390,9 @@ class BoundedHex(Hex):
         # loop over and strip out the out of bounds hexes.
         proxy = Hex(self)
         hexes = proxy.sixpack(*args, **kwargs)
-        return set(self.__class__(h) for h in hexes if self._valid(h))
+        return {self.__class__(h) for h in hexes if self._valid(h)}
 
     def arc(self, *args, **kwargs):
         proxy = Hex(self.x, self.y)
         hexes = proxy.arc(*args, **kwargs)
-        return set(self.__class__(h) for h in hexes if self._valid(h))
+        return {self.__class__(h) for h in hexes if self._valid(h)}
