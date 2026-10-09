@@ -22,7 +22,9 @@ class Node(Hex):
 
 def astar(current, end, maxsteps=1000):
     def retrace(c):
-        path = [Hex(c), ]
+        path = [
+            Hex(c),
+        ]
         while c.parent is not None:
             c = c.parent
             path.append(Hex(c))

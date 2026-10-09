@@ -7,7 +7,7 @@ from hexmap import Hex
 
 def arc(count):
     t = Hex()
-    foo = t.arc(1, 4 , count)
+    foo = t.arc(1, 4, count)
     sys.stderr.write(f'\n\n{len(foo)} hexes\n\n')
 
 

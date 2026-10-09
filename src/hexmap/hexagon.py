@@ -1,5 +1,5 @@
 __copyright__ = 'Copyright (c) 2004,2012 Norman J. Harman Jr. njharman@gmail.com'
-__license__ = '''This program is free software; you can redistribute it and/or modify it under
+__license__ = """This program is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
 Foundation; either version 2 of the License, or (at your option) any later
 version.
@@ -10,13 +10,13 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
 this program; if not, write to the Free Software Foundation, Inc., 59 Temple
-Place, Suite 330, Boston, MA 02111-1307 USA'''
-__doc__ = f'''Paper war game style hexes.
+Place, Suite 330, Boston, MA 02111-1307 USA"""
+__doc__ = f"""Paper war game style hexes.
 
 {__copyright__}
 
 {__license__}
-'''
+"""
 
 import logging
 import math
@@ -41,6 +41,7 @@ class Hex:
     Note:  Consider Hex instances to be "immutable", although this is not
     currently enforced.
     """
+
     digits = 2  # x, y portions of string value are zero padded this many digits minimum.
 
     __slots__ = ('_value', 'x', 'y')
@@ -109,7 +110,7 @@ class Hex:
             elif len(other) == 2:
                 x, y = other[0], other[1]
             return self.x == int(x) and self.y == int(y)
-        except (TypeError, IndexError, ValueError):
+        except TypeError, IndexError, ValueError:
             return False
 
     def __ne__(self, other):
@@ -119,7 +120,7 @@ class Hex:
             elif isinstance(other, int):
                 return str(self) != str(other)
             return len(other) != 2 or self.x != other[0] or self.y != other[1]
-        except (TypeError, IndexError, OffMapError):
+        except TypeError, IndexError, OffMapError:
             return False
 
     def __add__(self, other):
@@ -144,10 +145,10 @@ class Hex:
         value = str(value)
         length = len(value.replace('-', ''))
         if length % 2:
-            raise ValueError(f'''Hexes can't be constructed from odd length value [{value}]''')
+            raise ValueError(f"""Hexes can't be constructed from odd length value [{value}]""")
         digits = length // 2
         if value.startswith('-'):  # odd length
-            x, y = value[:digits + 1], value[digits + 1:]
+            x, y = value[: digits + 1], value[digits + 1 :]
         else:
             x, y = value[:digits], value[digits:]
         return x, y
@@ -198,9 +199,9 @@ class Hex:
         distance = d1
         # outside of triangles must add more.
         if b2 < triMin:
-                distance += (triMin - b2)
+            distance += triMin - b2
         if b2 > triMax:
-            distance += (b2 - triMax)
+            distance += b2 - triMax
         return distance
 
     def hexsides_to(self, to_hex):
@@ -220,25 +221,25 @@ class Hex:
             return (4,)
         # Even / odd columns need a nudge.
         if (self.x % 2) and not (to_hex.x % 2):
-            d_y += .5
+            d_y += 0.5
         if not (self.x % 2) and (to_hex.x % 2):
-            d_y -= .5
+            d_y -= 0.5
         # Hexes are wider than tall.
         d_y *= -20.0  # Negative cause math origin is lower left not upper left.
         d_x *= 17.32
         angle = round(math.degrees(math.atan2(d_y, d_x)), 2)
         if angle > 0 and angle < 60:
-            answer = (2, )
+            answer = (2,)
         elif angle > 60 and angle < 120:
-            answer = (1, )
+            answer = (1,)
         elif angle > 120 and angle < 180:
-            answer = (6, )
+            answer = (6,)
         elif angle < 0 and angle > -60:
-            answer = (3, )
+            answer = (3,)
         elif angle < -60 and angle > -120:
-            answer = (4, )
+            answer = (4,)
         elif angle < -120 and angle > -180:
-            answer = (5, )
+            answer = (5,)
         elif angle == 60:
             answer = (1, 2)
         elif angle == 0:
@@ -317,13 +318,13 @@ class Hex:
         for ring in range(1, distance + 1):
             start_row = start_row.hex_in_direction(start)
             hexes.add(start_row)
-            #log.debug('start:%s ring:%i\t%s' % (start_row, ring, [str(h) for h in hexes]))
+            # log.debug('start:%s ring:%i\t%s' % (start_row, ring, [str(h) for h in hexes]))
             current = start_row
             for direction in path:
                 for _ in range(ring):
                     current = current.hex_in_direction(direction)
                     hexes.add(current)
-                    #log.debug('step:%i in directo %i %s -> %s\t%s' % (i + 1, direction, prev, current, [str(h) for h in hexes]))
+                    # log.debug('step:%i in directo %i %s -> %s\t%s' % (i + 1, direction, prev, current, [str(h) for h in hexes]))
         return hexes
 
     def half_arc(self, hexsides, distance=1, include_self=False):
@@ -362,6 +363,7 @@ class BoundedHex(Hex):
 
     Hex instances outside those won't be returned and can't be created.
     """
+
     # Boundaries of map, inclusive. Subclass to change.
     xmin = 1
     xmax = 99
@@ -378,12 +380,7 @@ class BoundedHex(Hex):
 
     @classmethod
     def _valid(klas, h):
-        return not (
-                h.x < klas.xmin or
-                h.y < klas.ymin or
-                h.x > klas.xmax or
-                h.y > klas.ymax
-                )
+        return not (h.x < klas.xmin or h.y < klas.ymin or h.x > klas.xmax or h.y > klas.ymax)
 
     def sixpack(self, *args, **kwargs):
         # Kind of hackish, inefficient. Use unbounded Hex() to do sixpack.  Then
