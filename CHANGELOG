@@ -4,6 +4,7 @@ Unreleased
   * Tests converted to pytest style.
   * Removed debug prints from Hex.__eq__.
   * hexmap.astar demo only runs as a script, not on import.
+  * uv audit pre-commit hook.
 
 Version  0.1.0 Apri/2012
   * Extracted from my ancient KLM lib. Refactored muchly.
